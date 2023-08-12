@@ -1,40 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.wear.widget.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:padding="@dimen/box_inset_layout_padding"
-    tools:context=".MainActivity"
-    tools:deviceIds="wear">
+    android:layout_height="match_parent">
 
-    <FrameLayout
+    <androidx.wear.widget.BoxInsetLayout
+        xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="@dimen/inner_frame_layout_padding"
-        app:layout_boxedEdges="all">
+        android:layout_height="wrap_content"
+        android:padding="@dimen/box_inset_layout_padding"
+        tools:context=".MainActivity"
+        tools:deviceIds="wear">
 
-        <!-- Pointer Image -->
-        <ImageView
-            android:id="@+id/pointerView"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_gravity="center"
-            android:src="@android:drawable/arrow_up_float" />
-
-        <!-- RecyclerView for options -->
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recyclerView"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom" />
+            android:orientation="vertical">
 
-        <!-- WheelView -->
-        <com.jonesandjay123.wheelofchoices.WheelView
-            android:id="@+id/wheelView"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_gravity="center" />
+            <!-- Pointer Image -->
+            <ImageView
+                android:id="@+id/pointerView"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginBottom="-45dp"
+                android:layout_gravity="center"
+                android:clickable="false"
+                android:focusable="false"
+                android:src="@android:drawable/arrow_down_float" />
 
-    </FrameLayout>
-</androidx.wear.widget.BoxInsetLayout>
+            <!-- WheelView -->
+            <com.jonesandjay123.wheelofchoices.WheelView
+                android:id="@+id/wheelView"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
+                android:layout_gravity="center" />
+
+            <!-- RecyclerView for options -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom" />
+        </LinearLayout>
+    </androidx.wear.widget.BoxInsetLayout>
+</ScrollView>

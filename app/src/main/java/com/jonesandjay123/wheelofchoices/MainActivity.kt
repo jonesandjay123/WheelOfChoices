@@ -9,7 +9,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.os.Bundle
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
@@ -20,8 +19,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.jonesandjay123.wheelofchoices.databinding.ActivityMainBinding
 import kotlin.math.abs
-import kotlin.math.atan2
-import kotlin.math.sqrt
 
 class MainActivity : Activity() {
 
@@ -85,12 +82,8 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     // 轉盤的當前角度
     private var currentAngle = 0f
 
-    private var previousX: Float = 0f
-    private var previousY: Float = 0f
-
     private var longPressStartTime: Long = 0
     private var isLongPress: Boolean = false
-    private var velocity: Float = 0f // 用於追踪轉盤的速度
 
     // 繪製轉盤的畫筆
     private val wheelPaint = Paint().apply {
@@ -143,58 +136,33 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        val x = event.x
-        val y = event.y
-
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 longPressStartTime = System.currentTimeMillis()
-                previousX = x
-                previousY = y
-            }
-            MotionEvent.ACTION_MOVE -> {
-                if (isLongPress || System.currentTimeMillis() - longPressStartTime > 1000) {
-                    isLongPress = true
-                    val dx = x - previousX
-                    val dy = y - previousY
-
-                    // 根據移動的距離計算角度
-                    val distanceFromCenter = sqrt(dx * dx + dy * dy)
-                    val angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
-
-                    // 更新當前的角度和速度
-                    currentAngle += angle * distanceFromCenter / wheelRadius
-                    velocity = angle * distanceFromCenter / wheelRadius
-
-                    invalidate() // 請求重畫視圖
-
-                    previousX = x
-                    previousY = y
-                }
             }
             MotionEvent.ACTION_UP -> {
-                if (isLongPress) {
-                    // 開始旋轉動畫
-                    startSpinning()
-                    isLongPress = false
+                if (System.currentTimeMillis() - longPressStartTime > 1000) {
+                    isLongPress = true
+                    startSpinningBasedOnLongPressTime(System.currentTimeMillis() - longPressStartTime)
                 }
             }
         }
-
         return true
     }
 
-    private fun startSpinning() {
-        val factor = 2.0f
+    private fun startSpinningBasedOnLongPressTime(pressDuration: Long) {
+        val rotationSpeed = pressDuration.toFloat() / 100 // 可以根據需要調整
         val percentageOfVelocity = 0.3f // 使用速度的30%來計算持續時間，你可以調整這個值
-        val animator = ValueAnimator.ofFloat(velocity, 0f)
-        animator.duration = abs((velocity * 2000 * percentageOfVelocity).toLong())
+        val animator = ValueAnimator.ofFloat(rotationSpeed, 0f)
+        val factor = 2.0f
+        animator.duration = abs((rotationSpeed * 2000 * percentageOfVelocity).toLong()) // 可以根據需要調整
         animator.interpolator = DecelerateInterpolator(factor)
         animator.addUpdateListener { animation ->
             currentAngle += animation.animatedValue as Float
             invalidate()
         }
         animator.start()
+        isLongPress = false
     }
 }
 
