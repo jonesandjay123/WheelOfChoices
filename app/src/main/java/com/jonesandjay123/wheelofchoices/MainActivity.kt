@@ -25,18 +25,42 @@ class MainActivity : Activity() {
 
     private lateinit var binding: ActivityMainBinding
 
+    private fun saveOptions(options: List<String>) {
+        val sharedPreferences = getSharedPreferences("WheelOptions", Context.MODE_PRIVATE)
+        val editor = sharedPreferences.edit()
+        editor.putInt("size", options.size)
+        for (i in options.indices) {
+            editor.putString("option_$i", options[i])
+        }
+        editor.apply()
+    }
+
+    private fun loadOptions(): MutableList<String> {
+        val sharedPreferences = getSharedPreferences("WheelOptions", Context.MODE_PRIVATE)
+        val size = sharedPreferences.getInt("size", 0)
+        val options = mutableListOf<String>()
+        for (i in 0 until size) {
+            options.add(sharedPreferences.getString("option_$i", "") ?: "")
+        }
+        return options
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 這些是你的選項
-        val options = mutableListOf("Option A", "Option B")
+        // 從 SharedPreferences 加載選項
+        val options = loadOptions()
+        if (options.isEmpty()) {
+            options.addAll(listOf("Option A", "Option B")) // 如果沒有保存的選項，則使用默認選項
+        }
 
         binding.buttonAdd.setOnClickListener {
             val newOption = binding.editTextOption.text.toString()
             options.add(newOption)
+            saveOptions(options) // 保存選項
             binding.wheelView.setOptions(options)
             binding.recyclerView.adapter = OptionsAdapter(options) { selectedOption ->
                 binding.editTextOption.setText(selectedOption)
@@ -46,6 +70,7 @@ class MainActivity : Activity() {
         binding.buttonRemove.setOnClickListener {
             val optionToRemove = binding.editTextOption.text.toString()
             options.remove(optionToRemove)
+            saveOptions(options) // 保存選項
             binding.wheelView.setOptions(options)
             binding.recyclerView.adapter = OptionsAdapter(options) { selectedOption ->
                 binding.editTextOption.setText(selectedOption)
@@ -117,7 +142,7 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     // 繪製文字的畫筆
     private val textPaint = Paint().apply {
         color = Color.WHITE
-        textSize = 20f
+        textSize = 32f
         isAntiAlias = true
         textAlign = Paint.Align.CENTER
     }
