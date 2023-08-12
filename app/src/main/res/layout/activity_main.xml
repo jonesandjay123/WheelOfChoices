@@ -14,13 +14,6 @@
         android:padding="@dimen/inner_frame_layout_padding"
         app:layout_boxedEdges="all">
 
-        <View
-            class="com.example.wheelofchoices.WheelView"
-            android:id="@+id/wheelView"
-            android:layout_width="200dp"
-            android:layout_height="200dp"
-            android:layout_gravity="center" />
-
         <!-- Pointer Image -->
         <ImageView
             android:id="@+id/pointerView"
@@ -35,6 +28,13 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom" />
+
+        <!-- WheelView -->
+        <com.jonesandjay123.wheelofchoices.WheelView
+            android:id="@+id/wheelView"
+            android:layout_width="200dp"
+            android:layout_height="200dp"
+            android:layout_gravity="center" />
 
     </FrameLayout>
 </androidx.wear.widget.BoxInsetLayout>
