@@ -1,0 +1,2 @@
+# WheelOfChoices
+WheelOfChoices is a unique and playful decision-making tool designed exclusively for Wear OS. Utilizing a spinning wheel interface, it allows users to input various options and make unbiased choices with a simple spin. Whether you're deciding on a dining venue or making everyday choices, let the WheelOfChoices on your wrist guide you!
