@@ -30,16 +30,32 @@ class MainActivity : Activity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 使用 binding 訪問 WheelView
-        val wheelView = binding.wheelView
-        // 你可以在這裡設置 WheelView 的一些屬性，例如設置選項等
-
         // 這些是你的選項
-        val options = listOf("Option 1", "Option 2", "Option 3")
+        val options = mutableListOf("Option 1", "Option 2", "Option 3", "Option 4")
+
+        binding.buttonAdd.setOnClickListener {
+            val newOption = binding.editTextOption.text.toString()
+            options.add(newOption)
+            binding.wheelView.setOptions(options)
+            binding.recyclerView.adapter?.notifyDataSetChanged()
+        }
+
+        binding.buttonRemove.setOnClickListener {
+            if (options.isNotEmpty()) {
+                options.removeAt(options.lastIndex)
+                binding.wheelView.setOptions(options)
+                binding.recyclerView.adapter = OptionsAdapter(options) // 重新設置適配器
+            }
+        }
 
         // 設置RecyclerView的佈局管理器和適配器
         binding.recyclerView.layoutManager = LinearLayoutManager(this)
         binding.recyclerView.adapter = OptionsAdapter(options)
+
+        // 使用 binding 訪問 WheelView
+        val wheelView = binding.wheelView
+        // 設置 WheelView 的選項
+        wheelView.setOptions(options)
     }
 }
 
@@ -77,7 +93,7 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private val pointerColor = Color.parseColor("#FFC107")
 
     // 轉盤上的選項
-    private val options = arrayOf("Option 1", "Option 2", "Option 3", "Option 4")
+    private var options: List<String> = listOf()
 
     // 轉盤的當前角度
     private var currentAngle = 0f
@@ -105,6 +121,11 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         textSize = 20f
         isAntiAlias = true
         textAlign = Paint.Align.CENTER
+    }
+
+    fun setOptions(newOptions: List<String>) {
+        options = newOptions
+        invalidate() // 重新繪製視圖以反映新的選項
     }
 
     override fun onDraw(canvas: Canvas) {
