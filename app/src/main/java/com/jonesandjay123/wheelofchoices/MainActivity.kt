@@ -1,5 +1,6 @@
 package com.jonesandjay123.wheelofchoices
 
+import android.animation.ValueAnimator
 import android.app.Activity
 import android.content.Context
 import android.graphics.Canvas
@@ -13,10 +14,12 @@ import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.jonesandjay123.wheelofchoices.databinding.ActivityMainBinding
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.sqrt
 
@@ -85,6 +88,10 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     private var previousX: Float = 0f
     private var previousY: Float = 0f
 
+    private var longPressStartTime: Long = 0
+    private var isLongPress: Boolean = false
+    private var velocity: Float = 0f // 用於追踪轉盤的速度
+
     // 繪製轉盤的畫筆
     private val wheelPaint = Paint().apply {
         color = wheelColor
@@ -141,28 +148,53 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
+                longPressStartTime = System.currentTimeMillis()
                 previousX = x
                 previousY = y
             }
             MotionEvent.ACTION_MOVE -> {
-                val dx = x - previousX
-                val dy = y - previousY
+                if (isLongPress || System.currentTimeMillis() - longPressStartTime > 1000) {
+                    isLongPress = true
+                    val dx = x - previousX
+                    val dy = y - previousY
 
-                // 根據移動的距離計算角度
-                val distanceFromCenter = sqrt(dx * dx + dy * dy)
-                val angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
+                    // 根據移動的距離計算角度
+                    val distanceFromCenter = sqrt(dx * dx + dy * dy)
+                    val angle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
 
-                // 更新當前的角度
-                currentAngle += angle * distanceFromCenter / wheelRadius
+                    // 更新當前的角度和速度
+                    currentAngle += angle * distanceFromCenter / wheelRadius
+                    velocity = angle * distanceFromCenter / wheelRadius
 
-                invalidate() // 請求重畫視圖
+                    invalidate() // 請求重畫視圖
 
-                previousX = x
-                previousY = y
+                    previousX = x
+                    previousY = y
+                }
+            }
+            MotionEvent.ACTION_UP -> {
+                if (isLongPress) {
+                    // 開始旋轉動畫
+                    startSpinning()
+                    isLongPress = false
+                }
             }
         }
 
         return true
+    }
+
+    private fun startSpinning() {
+        val factor = 2.0f
+        val percentageOfVelocity = 0.3f // 使用速度的30%來計算持續時間，你可以調整這個值
+        val animator = ValueAnimator.ofFloat(velocity, 0f)
+        animator.duration = abs((velocity * 2000 * percentageOfVelocity).toLong())
+        animator.interpolator = DecelerateInterpolator(factor)
+        animator.addUpdateListener { animation ->
+            currentAngle += animation.animatedValue as Float
+            invalidate()
+        }
+        animator.start()
     }
 }
 
