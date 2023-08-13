@@ -21,6 +21,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.jonesandjay123.wheelofchoices.databinding.ActivityMainBinding
 import java.util.Random
 import kotlin.math.abs
+import kotlin.math.min
 
 class MainActivity : Activity() {
 
@@ -173,8 +174,23 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     fun setOptions(newOptions: List<String>) {
         options = newOptions
         setRandomColors(newOptions.size)
-        invalidate() // 重新繪製視圖以反映新的選項
+
+        // 計算每個選項區域的角度
+        val optionAngle = 360f / options.size
+
+        // 計算每個選項區域的高度
+        val optionHeight = 2 * Math.PI * wheelRadius * (optionAngle / 360).toDouble()
+
+        // 基於選項區域的高度計算字體大小，這裡我們使用一個簡單的比例計算
+        // 您可以根據需要調整這個公式
+        val fontSize = min(42f, (optionHeight / 4).toFloat()) // 將字體大小限制在42F以下，並使其與選項區域的高度成比例
+
+        // 設置字體大小
+        textPaint.textSize = fontSize
+
+        invalidate() // 重新繪製視圖以反映新的選項和字體大小
     }
+
 
     private fun setRandomColors(size: Int) {
         colors.clear()
