@@ -14,6 +14,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
+import android.view.animation.LinearInterpolator
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -87,6 +88,16 @@ class MainActivity : Activity() {
         val wheelView = binding.wheelView
         // 設置 WheelView 的選項
         wheelView.setOptions(options)
+
+        binding.toggleChanceOrFate.isChecked = true // 預設為Fate模式
+
+        binding.toggleChanceOrFate.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                binding.wheelView.mode = Mode.Fate
+            } else {
+                binding.wheelView.mode = Mode.Chance
+            }
+        }
     }
 }
 
@@ -115,8 +126,21 @@ class OptionsAdapter(private val options: List<String>, private val onItemClick:
     override fun getItemCount() = options.size
 }
 
+enum class Mode {
+    Fate, Chance
+}
+
 class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
 
+    var mode: Mode = Mode.Fate // 預設模式為Fate
+        set(value) { // 自定義setter
+            field = value // 更新屬性值
+            if (value == Mode.Chance && animator.isRunning) {
+                animator.cancel() // 如果更改為Chance模式且轉盤正在旋轉，則立即停止
+            }
+        }
+
+    private val chanceRotationSpeed = 10f // 這個值定義了"Chance"模式下的轉速
 
     private val wheelRadius = 135f // 轉盤的半徑
     private val pointerRadius = 10f // 指針的半徑
@@ -142,7 +166,7 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
     // 繪製文字的畫筆
     private val textPaint = Paint().apply {
         color = Color.WHITE
-        textSize = 32f
+        textSize = 42f
         isAntiAlias = true
         textAlign = Paint.Align.CENTER
     }
@@ -204,19 +228,46 @@ class WheelView(context: Context, attrs: AttributeSet) : View(context, attrs) {
         when (event.action) {
             MotionEvent.ACTION_DOWN -> {
                 longPressStartTime = System.currentTimeMillis()
+                if (mode == Mode.Chance && animator.isRunning) {
+                    animator.cancel() // 如果是Chance模式且轉盤正在旋轉，則立即停止
+                }
             }
             MotionEvent.ACTION_UP -> {
                 if (System.currentTimeMillis() - longPressStartTime > 1000) {
                     isLongPress = true
-                    startSpinningBasedOnLongPressTime(System.currentTimeMillis() - longPressStartTime)
+                    if (mode == Mode.Fate) {
+                        startSpinningBasedOnLongPressTime(System.currentTimeMillis() - longPressStartTime)
+                    } else {
+                        startSpinningWithFixedRate() // Chance模式下以固定速度旋轉
+                    }
                 }
             }
         }
         return true
     }
 
+    private val animator = ValueAnimator.ofFloat(chanceRotationSpeed, chanceRotationSpeed) // 使用固定的轉速
+
+    private fun startSpinningWithFixedRate() {
+        animator.removeAllUpdateListeners() // 清除之前的所有更新監聽器以避免隨回合累加的轉速
+
+        animator.duration = Long.MAX_VALUE // 永遠不停止
+        animator.interpolator = LinearInterpolator()
+        animator.addUpdateListener { animation ->
+            currentAngle += animation.animatedValue as Float
+            currentAngle %= 360 // 確保角度在0到360之間
+            invalidate()
+        }
+        animator.start()
+        isLongPress = false
+    }
+
     private fun startSpinningBasedOnLongPressTime(pressDuration: Long) {
-        val rotationSpeed = pressDuration.toFloat() / 100 // 可以根據需要調整
+        val rotationSpeed = if (mode == Mode.Fate) {
+            pressDuration.toFloat() / 100 // Fate模式下的旋轉速度計算
+        } else {
+            chanceRotationSpeed // Chance模式下使用固定的轉速
+        }
         val percentageOfVelocity = 0.3f // 使用速度的30%來計算持續時間，你可以調整這個值
         val animator = ValueAnimator.ofFloat(rotationSpeed, 0f)
         val factor = 2.0f
